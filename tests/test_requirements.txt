@@ -1,0 +1,20 @@
+# Test dependencies
+# Install with: pip install -e .[test]
+# 
+# This file is maintained for backward compatibility
+# All dependencies are now managed in pyproject.toml
+#
+# To install test dependencies:
+# - Modern approach: pip install -e .[test] 
+# - Legacy approach: pip install -r test_requirements.txt
+
+# Legacy format for tools that still expect requirements.txt
+# These should match the [project.optional-dependencies.test] section in pyproject.toml
+
+pytest>=7.0.0
+pytest-mock>=3.0.0
+pytest-cov>=4.0.0
+pytest-env>=0.6.2
+pytest-timeout>=2.1.0
+unittest-xml-reporting>=3.2.0
+databricks-cli>=0.17.0

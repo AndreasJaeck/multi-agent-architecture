@@ -12,13 +12,17 @@ DEFAULT_AGENTS = [
         name='CoatingsSupervisorAgent',
         description='Coatings industry SME for market news search and plant data analysis',
         endpoint='genie_multi_agent_basf',
-        system_prompt='You are a coatings industry expert. Provide detailed analysis on coating-related topics.'
+        system_prompt='You are a coatings industry expert. Provide detailed analysis on coating-related topics.',
+        capabilities='vector search, SQL-based analytics, market trends, durability/UV materials',
+        domain='chemical_data'
     ),
     AgentConfig(
         name='GenomicsSupervisorAgent',
         description='Genomics & computational SME for Python execution and patient data queries',
         endpoint='genie_multi_agent_basf_v2',
-        system_prompt='You are a genomics and computational expert with Python and SQL capabilities.'
+        system_prompt='You are a genomics and computational expert with Python and SQL capabilities.',
+        capabilities='python code execution, math/statistics, genomics SQL/data querying',
+        domain='computational_tools'
     ),
 ]
 

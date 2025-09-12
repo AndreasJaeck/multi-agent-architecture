@@ -10,7 +10,11 @@ class MarkdownPlanner:
         self.llm = llm
 
     def plan(self, question: str, experts: List[AgentConfig]) -> List[PlanStep]:
-        experts_md = "\n".join([f"- {e.name}: {e.description}" for e in experts])
+        def mk_line(e: AgentConfig) -> str:
+            caps = f" | capabilities: {e.capabilities}" if getattr(e, "capabilities", None) else ""
+            dom = f" | domain: {e.domain}" if getattr(e, "domain", None) else ""
+            return f"- {e.name}: {e.description}{caps}{dom}"
+        experts_md = "\n".join([mk_line(e) for e in experts])
         prompt = planning_prompt(question, experts_md)
         resp = self.llm.make_llm_call(
             messages=[{"role": "user", "content": prompt}],
@@ -18,7 +22,9 @@ class MarkdownPlanner:
             max_tokens=800,
         )
         md = self.llm.extract_response_content(resp).strip()
-        return self._parse_markdown(md)
+        steps = self._parse_markdown(md)
+        # Cap number of steps to avoid excessive calls
+        return steps[:3]
 
     @staticmethod
     def _parse_markdown(md: str) -> List[PlanStep]:

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -8,6 +8,8 @@ class AgentConfig:
     description: str
     endpoint: str
     system_prompt: str
+    capabilities: Optional[str] = None
+    domain: Optional[str] = None
 
 
 @dataclass

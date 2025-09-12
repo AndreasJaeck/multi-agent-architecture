@@ -18,7 +18,6 @@ class DomainAgentExecutor:
         resp = self.llm.make_llm_call(messages, temperature=0.2, max_tokens=1000)
         return self.llm.extract_response_content(resp)
 
-
 class AgentRegistry:
     def __init__(self, agents: List[DomainAgentExecutor]):
         self._by_name: Dict[str, DomainAgentExecutor] = {a.config.name: a for a in agents}

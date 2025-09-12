@@ -1,3 +1,4 @@
+import os
 import backoff
 import mlflow
 import openai
@@ -32,6 +33,19 @@ class LLMClient:
     @backoff.on_exception(backoff.expo, (openai.RateLimitError, openai.APITimeoutError, openai.APIConnectionError))
     @mlflow.trace(span_type=SpanType.LLM)
     def make_llm_call(self, messages, temperature: float, max_tokens: int):
+        if os.getenv("DEBUG_PROMPTS", "0") == "1":
+            try:
+                print("\n=== DEBUG_PROMPTS: LLM CALL ===")
+                print(f"Endpoint: {self.model_endpoint}")
+                print(f"Temperature: {temperature} | Max tokens: {max_tokens}")
+                print("Messages:")
+                for m in messages:
+                    role = m.get("role") if isinstance(m, dict) else getattr(m, "role", None)
+                    content = m.get("content") if isinstance(m, dict) else getattr(m, "content", None)
+                    print(f"- {role}: {str(content)[:800]}")
+                print("=== END DEBUG_PROMPTS ===\n")
+            except Exception:
+                pass
         return self.client.chat.completions.create(
             model=self.model_endpoint,
             messages=messages,

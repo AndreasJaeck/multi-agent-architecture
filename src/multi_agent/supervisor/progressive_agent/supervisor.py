@@ -1,5 +1,3 @@
-import mlflow
-from mlflow.entities import SpanType
 from mlflow.pyfunc import ResponsesAgent
 from mlflow.types.responses import ResponsesAgentRequest, ResponsesAgentResponse, ResponsesAgentStreamEvent
 
@@ -49,7 +47,6 @@ class SupervisorResponsesAgent(ResponsesAgent):
                 return f" Use the original expression from the user and verify the computed result equals {nums[-1]}, showing all steps."
         return ""
 
-    @mlflow.trace(span_type=SpanType.AGENT)
     def predict_stream(self, request: ResponsesAgentRequest):
         user_message = request.input[-1].content if request.input else ""
 
@@ -76,6 +73,16 @@ class SupervisorResponsesAgent(ResponsesAgent):
                 exec_thought = self.streamer.thinking(f"Executing: Call {step.agent_name} to {step.instruction}")
                 if exec_thought:
                     yield exec_thought
+
+                # Skip verification if we already have a complete numeric/textual result
+                if self._is_verification_step(step.instruction) and any(
+                    self._classify_output(r.content)["type"] == "answer_complete" for r in collected
+                ):
+                    skip_ev = self.streamer.thinking("Skipping redundant verification step")
+                    if skip_ev:
+                        yield skip_ev
+                    i += 1
+                    continue
 
                 call_id = f"call-{step.agent_name}"
                 yield StreamFormatter.tool_call_item(self, call_id, step.agent_name, f'{{"instruction": "{step.instruction}"}}')
@@ -142,7 +149,6 @@ class SupervisorResponsesAgent(ResponsesAgent):
             final = self.synthesizer.synthesize(user_message, collected) if collected else "No agents available."
             yield StreamFormatter.final_block(self, final)
 
-    @mlflow.trace(span_type=SpanType.AGENT)
     def predict(self, request: ResponsesAgentRequest) -> ResponsesAgentResponse:
         outputs = [
             event.item for event in self.predict_stream(request) if isinstance(event, ResponsesAgentStreamEvent) and event.type == "response.output_item.done"

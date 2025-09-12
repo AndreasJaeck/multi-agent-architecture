@@ -12,10 +12,10 @@ def planning_prompt(question: str, experts_md: str) -> str:
 Question:
 {question}
 
-Available experts (refer to them by name exactly as shown):
+Available experts and tools (refer to them by name exactly as shown):
 {experts_md}
 
-Output a concise plan in markdown with bullet points only. Each bullet should start with "- Call {{AgentName}} to ..." and include the focused instruction for that expert. Keep 2–4 bullets max. When planning a verification step, include the precise expression and expected value (if known) so the expert can act without asking for clarification. Optionally add a final bullet "- Consider synthesizing the responses if needed". Do not include any JSON or commentary, only the bullet list.
+Output a concise to-do list in markdown with bullet points only.
 """.strip()
 
 

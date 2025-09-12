@@ -38,10 +38,15 @@ class MarkdownPlanner:
             if content.lower().startswith("consider synthesizing"):
                 hint_synth = True
                 continue
-            # expected: "Call AgentName to <instruction>"
-            if content.lower().startswith("call ") and " to " in content:
-                after_call = content[5:]
-                agent_name, instruction = after_call.split(" to ", 1)
+            # expected variants: "Call AgentName to <instruction>" or "Use AgentName to <instruction>"
+            lower = content.lower()
+            if (lower.startswith("call ") or lower.startswith("use ")) and " to " in content:
+                # remove leading verb (Call/Use)
+                if lower.startswith("call "):
+                    after = content[5:]
+                else:
+                    after = content[4:]
+                agent_name, instruction = after.split(" to ", 1)
                 steps.append(PlanStep(agent_name=agent_name.strip(), instruction=instruction.strip()))
         if steps:
             steps[-1].hint_synthesize = hint_synth

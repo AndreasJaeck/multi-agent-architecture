@@ -363,16 +363,6 @@ This hybrid design creates a sophisticated hierarchy where domain experts act as
 
 ## Quick Start
 
-### Installation
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# For development
-pip install -e .
-```
-
 ### Basic Usage
 
 ```python
@@ -383,30 +373,8 @@ response = AGENT.predict_stream(request)
 
 ## Documentation
 
-- [Multi-Agent Patterns & Trade-offs](docs/multi_agent_patterns.md) - Comprehensive analysis of different architectural patterns
 - [FMAPI Supervisor Agent](src/multi_agent/supervisor/README_fmapi_supervisor_agent.md) - Tool-calling implementation details
 
-## Testing
-
-```bash
-# Run unit tests
-python -m pytest tests/unit/
-
-# Run integration tests
-python -m pytest tests/integration/
-
-# Run all tests
-python run_tests.py
-```
-
-## Contributing
-
-This project implements multiple multi-agent architectural patterns for different use cases. When contributing:
-
-1. Choose the appropriate pattern for your use case based on the selection guide above
-2. Follow the established patterns and documentation conventions
-3. Include flow charts for new architectures using Mermaid syntax
-4. Add comprehensive tests for new components
 
 ## License
 

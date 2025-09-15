@@ -198,16 +198,10 @@ for item in response.output:
 source .venv/bin/activate
 
 # Test with default query
-python tests/integration/stream_fmapi_supervisor.py
+python -m tests.integration.test_fmapi_supervisor_agent
 
 # Test with custom query
-python tests/integration/stream_fmapi_supervisor.py \
-    --question "Provide detailed analysis of coatings industry trends"
-
-# Test with specific supervisor endpoint
-python tests/integration/stream_fmapi_supervisor.py \
-    --question "Calculate mathematical expression: (3^6)/6" \
-    --supervisor-endpoint "databricks-claude-3-7-sonnet"
+python -m tests.integration.test_fmapi_supervisor_agent --question "Provide detailed analysis of coatings industry trends"
 ```
 
 **Expected Output:**
@@ -703,18 +697,10 @@ The project includes basic test scripts for manual validation:
 #### Manual Integration Tests
 ```bash
 # Test streaming supervisor agent manually
-python tests/integration/stream_fmapi_supervisor.py
+python -m tests.integration.test_fmapi_supervisor_agent
 
-# Test Databricks connectivity
-python tests/integration/test_databricks_connectivity.py
-```
-
-#### Basic Unit Test Scripts
-```bash
-# Basic unit tests for progressive agent components
-python tests/unit/progressive_agent/test_supervisor_stream.py
-python tests/unit/progressive_agent/test_minimal_calls.py
-python tests/unit/progressive_agent/test_tools_registry.py
+# Test with custom question
+python -m tests.integration.test_fmapi_supervisor_agent --question "Calculate 6*7 in Python"
 ```
 
 **Note**: These are manual test scripts for basic validation.

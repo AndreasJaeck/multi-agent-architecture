@@ -35,6 +35,297 @@
 # MAGIC %pip install -U -qqq mlflow langgraph==0.3.4 databricks-langchain databricks-agents uv
 # MAGIC dbutils.library.restartPython()
 
+# COMMAND ----------
+
+# MAGIC %%writefile supervisor_of_supervisors.py
+# MAGIC import functools
+# MAGIC import os
+# MAGIC import uuid
+# MAGIC from typing import Any, Generator, Literal, Optional
+# MAGIC
+# MAGIC import mlflow
+# MAGIC from databricks.sdk import WorkspaceClient
+# MAGIC from databricks_langchain import (
+# MAGIC     ChatDatabricks,
+# MAGIC     UCFunctionToolkit,
+# MAGIC )
+# MAGIC from langchain_core.runnables import RunnableLambda
+# MAGIC from langgraph.graph import END, StateGraph
+# MAGIC from langgraph.graph.state import CompiledStateGraph
+# MAGIC from langgraph.prebuilt import create_react_agent
+# MAGIC from mlflow.langchain.chat_agent_langgraph import ChatAgentState
+# MAGIC from mlflow.pyfunc import ChatAgent
+# MAGIC from mlflow.types.agent import (
+# MAGIC     ChatAgentChunk,
+# MAGIC     ChatAgentMessage,
+# MAGIC     ChatAgentResponse,
+# MAGIC     ChatContext,
+# MAGIC )
+# MAGIC from mlflow.deployments import get_deploy_client
+# MAGIC from pydantic import BaseModel
+# MAGIC
+# MAGIC ###################################################
+# MAGIC ## Create agents from existing endpoints
+# MAGIC ###################################################
+# MAGIC
+# MAGIC # BASF Data Agent (Gbuilt data + Valona vector search)
+# MAGIC basf_data_agent_description = (
+# MAGIC     "The BASF Data assistant has access to Gbuilt data from BASF and can perform vector search "
+# MAGIC     "on Valona market insights data. Use this agent for queries about BASF-related data, chemical information, "
+# MAGIC     "or when searching through BASF documentation and datasets."
+# MAGIC )
+# MAGIC
+# MAGIC BASF_DATA_ENDPOINT = "genie_multi_agent_basf"
+# MAGIC basf_data_model = ChatDatabricks(endpoint=BASF_DATA_ENDPOINT)
+# MAGIC basf_data_agent = create_react_agent(basf_data_model, [])
+# MAGIC
+# MAGIC # Genomics Tools Agent (patient genomics data + computational tools)
+# MAGIC genomics_tools_agent_description = (
+# MAGIC     "The Genomics Tools assistant has access to patient genomics data and can perform "
+# MAGIC     "mathematical computations and execute Python code. Use this agent for genomics analysis, "
+# MAGIC     "data processing, calculations, or when computational tools are needed."
+# MAGIC )
+# MAGIC
+# MAGIC GENOMICS_TOOLS_ENDPOINT = "genie_multi_agent_basf_v2"
+# MAGIC genomics_tools_model = ChatDatabricks(endpoint=GENOMICS_TOOLS_ENDPOINT)
+# MAGIC genomics_tools_agent = create_react_agent(genomics_tools_model, [])
+# MAGIC
+# MAGIC ############################################
+# MAGIC # Define your LLM endpoint and system prompt
+# MAGIC ############################################
+# MAGIC
+# MAGIC # Multi-agent orchestration using Claude Sonnet 4
+# MAGIC LLM_ENDPOINT_NAME = "databricks-claude-3-7-sonnet"
+# MAGIC llm = ChatDatabricks(endpoint=LLM_ENDPOINT_NAME)
+# MAGIC
+# MAGIC #############################
+# MAGIC # Define the supervisor agent
+# MAGIC #############################
+# MAGIC
+# MAGIC # Maximum number of iterations between supervisor and worker nodes
+# MAGIC MAX_ITERATIONS = 3
+# MAGIC
+# MAGIC worker_descriptions = {
+# MAGIC     "BASF_Data": basf_data_agent_description,
+# MAGIC     "Genomics_Tools": genomics_tools_agent_description,
+# MAGIC }
+# MAGIC
+# MAGIC formatted_descriptions = "\n".join(
+# MAGIC     f"- {name}: {desc}" for name, desc in worker_descriptions.items()
+# MAGIC )
+# MAGIC
+# MAGIC options = ["FINISH"] + list(worker_descriptions.keys())
+# MAGIC
+# MAGIC def supervisor_agent(state):
+# MAGIC     count = state.get("iteration_count", 0) + 1
+# MAGIC     print('iteration count', count)
+# MAGIC     
+# MAGIC     # Check max iterations
+# MAGIC     if count > MAX_ITERATIONS:
+# MAGIC         return {"next_node": "FINISH"}
+# MAGIC     
+# MAGIC     # Check if we have any agent responses
+# MAGIC     messages = state.get("messages", [])
+# MAGIC     agent_responses = [msg for msg in messages if msg.get("role") == "assistant" and msg.get("name")]
+# MAGIC     
+# MAGIC     # Build context about latest response if available
+# MAGIC     latest_context = ""
+# MAGIC     if agent_responses:
+# MAGIC         latest_agent = agent_responses[-1]
+# MAGIC         latest_context = (
+# MAGIC             f"\n\nLatest response from {latest_agent.get('name', 'unknown')}:\n"
+# MAGIC             f"{latest_agent.get('content', '')[:500]}...\n\n"
+# MAGIC             f"IMPORTANT: If this response completely answers the user's question, choose FINISH."
+# MAGIC         )
+# MAGIC     
+# MAGIC     # Single unified prompt
+# MAGIC     system_prompt = (
+# MAGIC         f"You are a supervisor managing these assistants:\n"
+# MAGIC         f"{formatted_descriptions}\n\n"
+# MAGIC         f"Given the conversation history, respond with the assistant to act next.\n"
+# MAGIC         f"DECISION RULES:\n"
+# MAGIC         f"1. If ANY agent has provided a complete answer to the user's question, respond with FINISH\n"
+# MAGIC         f"2. Only call another agent if the current answer is incomplete or incorrect\n"
+# MAGIC         f"3. Do NOT call additional agents just to verify or add to a complete answer"
+# MAGIC         f"{latest_context}"
+# MAGIC     )
+# MAGIC     
+# MAGIC     class nextNode(BaseModel):
+# MAGIC         next_node: Literal[tuple(options)]
+# MAGIC         reasoning: str  # Optional: helps debug decisions
+# MAGIC     
+# MAGIC     preprocessor = RunnableLambda(
+# MAGIC         lambda state: [{"role": "system", "content": system_prompt}] + state["messages"]
+# MAGIC     )
+# MAGIC     supervisor_chain = preprocessor | llm.with_structured_output(nextNode)
+# MAGIC     
+# MAGIC     result = supervisor_chain.invoke(state)
+# MAGIC     print(f"Supervisor decision: {result.next_node}, Reasoning: {result.reasoning}")
+# MAGIC     
+# MAGIC     # If routed back to the same node that just responded, finish
+# MAGIC     if agent_responses and result.next_node == agent_responses[-1].get("name"):
+# MAGIC         print(f"Supervisor trying to route back to {result.next_node}, forcing FINISH")
+# MAGIC         return {"next_node": "FINISH"}
+# MAGIC     
+# MAGIC     return {
+# MAGIC         "iteration_count": count,
+# MAGIC         "next_node": result.next_node
+# MAGIC     }
+# MAGIC #######################################
+# MAGIC # Define our multiagent graph structure
+# MAGIC #######################################
+# MAGIC
+# MAGIC def agent_node(state, agent, name):
+# MAGIC     result = agent.invoke(state)
+# MAGIC     # Extract the content from the result
+# MAGIC     if "messages" in result and len(result["messages"]) > 0:
+# MAGIC         last_message = result["messages"][-1]
+# MAGIC         # Handle different message formats
+# MAGIC         if hasattr(last_message, "content"):
+# MAGIC             content = last_message.content
+# MAGIC         elif isinstance(last_message, dict) and "content" in last_message:
+# MAGIC             content = last_message["content"]
+# MAGIC         else:
+# MAGIC             content = str(last_message)
+# MAGIC         
+# MAGIC         # Ensure content is a string
+# MAGIC         if not isinstance(content, str):
+# MAGIC             content = str(content)
+# MAGIC     else:
+# MAGIC         content = "No response from agent"
+# MAGIC     
+# MAGIC     return {
+# MAGIC         "messages": [
+# MAGIC             {
+# MAGIC                 "role": "assistant",
+# MAGIC                 "content": content,
+# MAGIC                 "name": name,
+# MAGIC             }
+# MAGIC         ]
+# MAGIC     }
+# MAGIC
+# MAGIC def final_answer(state):
+# MAGIC     system_prompt = "Using only the content in the messages, respond to the user's question using the answer given by the other agents."
+# MAGIC     preprocessor = RunnableLambda(
+# MAGIC         lambda state: [{"role": "system", "content": system_prompt}] + state["messages"]
+# MAGIC     )
+# MAGIC     final_answer_chain = preprocessor | llm
+# MAGIC     return {"messages": [final_answer_chain.invoke(state)]}
+# MAGIC
+# MAGIC class AgentState(ChatAgentState):
+# MAGIC     next_node: str
+# MAGIC     iteration_count: int
+# MAGIC
+# MAGIC basf_data_node = functools.partial(agent_node, agent=basf_data_agent, name="BASF_Data")
+# MAGIC genomics_tools_node = functools.partial(agent_node, agent=genomics_tools_agent, name="Genomics_Tools")
+# MAGIC
+# MAGIC workflow = StateGraph(AgentState)
+# MAGIC workflow.add_node("BASF_Data", basf_data_node)
+# MAGIC workflow.add_node("Genomics_Tools", genomics_tools_node)
+# MAGIC workflow.add_node("supervisor", supervisor_agent)
+# MAGIC workflow.add_node("final_answer", final_answer)
+# MAGIC
+# MAGIC workflow.set_entry_point("supervisor")
+# MAGIC
+# MAGIC # We want our workers to ALWAYS "report back" to the supervisor when done
+# MAGIC for worker in worker_descriptions.keys():
+# MAGIC     workflow.add_edge(worker, "supervisor")
+# MAGIC
+# MAGIC # Let the supervisor decide which next node to go
+# MAGIC workflow.add_conditional_edges(
+# MAGIC     "supervisor",
+# MAGIC     lambda x: x["next_node"],
+# MAGIC     {**{k: k for k in worker_descriptions.keys()}, "FINISH": "final_answer"},
+# MAGIC )
+# MAGIC workflow.add_edge("final_answer", END)
+# MAGIC multi_agent = workflow.compile()
+# MAGIC
+# MAGIC ###################################
+# MAGIC # Wrap our multi-agent in ChatAgent
+# MAGIC ###################################
+# MAGIC
+# MAGIC class LangGraphChatAgent(ChatAgent):
+# MAGIC     def __init__(self, agent: CompiledStateGraph):
+# MAGIC         self.agent = agent
+# MAGIC
+# MAGIC     def predict(
+# MAGIC         self,
+# MAGIC         messages: list[ChatAgentMessage],
+# MAGIC         context: Optional[ChatContext] = None,
+# MAGIC         custom_inputs: Optional[dict[str, Any]] = None,
+# MAGIC     ) -> ChatAgentResponse:
+# MAGIC         request = {
+# MAGIC             "messages": [m.model_dump_compat(exclude_none=True) for m in messages]
+# MAGIC         }
+# MAGIC
+# MAGIC         response_messages = []
+# MAGIC         for event in self.agent.stream(request, stream_mode="updates"):
+# MAGIC             for node_data in event.values():
+# MAGIC                 node_messages = node_data.get("messages", [])
+# MAGIC                 for msg in node_messages:
+# MAGIC                     # Handle different message formats
+# MAGIC                     if isinstance(msg, dict):
+# MAGIC                         # Ensure all required fields are present
+# MAGIC                         message_dict = {
+# MAGIC                             "id": str(uuid.uuid4()),
+# MAGIC                             "role": msg.get("role", "assistant"),
+# MAGIC                             "content": str(msg.get("content", ""))
+# MAGIC                         }
+# MAGIC                         # Add optional fields if present
+# MAGIC                         if "name" in msg:
+# MAGIC                             message_dict["name"] = msg["name"]
+# MAGIC                         response_messages.append(ChatAgentMessage(**message_dict))
+# MAGIC                     elif hasattr(msg, "role") and hasattr(msg, "content"):
+# MAGIC                         # If it's already a message object
+# MAGIC                         response_messages.append(ChatAgentMessage(
+# MAGIC                             id=str(uuid.uuid4()),
+# MAGIC                             role=msg.role,
+# MAGIC                             content=str(msg.content)
+# MAGIC                         ))
+# MAGIC                     else:
+# MAGIC                         # Fallback for other formats
+# MAGIC                         response_messages.append(ChatAgentMessage(
+# MAGIC                             id=str(uuid.uuid4()),
+# MAGIC                             role="assistant",
+# MAGIC                             content=str(msg)
+# MAGIC                         ))
+# MAGIC         
+# MAGIC         return ChatAgentResponse(messages=response_messages)
+# MAGIC
+# MAGIC     def predict_stream(
+# MAGIC         self,
+# MAGIC         messages: list[ChatAgentMessage],
+# MAGIC         context: Optional[ChatContext] = None,
+# MAGIC         custom_inputs: Optional[dict[str, Any]] = None,
+# MAGIC     ) -> Generator[ChatAgentChunk, None, None]:
+# MAGIC         request = {
+# MAGIC             "messages": [m.model_dump_compat(exclude_none=True) for m in messages]
+# MAGIC         }
+# MAGIC         for event in self.agent.stream(request, stream_mode="updates"):
+# MAGIC             for node_data in event.values():
+# MAGIC                 node_messages = node_data.get("messages", [])
+# MAGIC                 for msg in node_messages:
+# MAGIC                     # Create chunk from message
+# MAGIC                     if isinstance(msg, dict):
+# MAGIC                         chunk_data = {
+# MAGIC                             "role": msg.get("role", "assistant"),
+# MAGIC                             "content": str(msg.get("content", ""))
+# MAGIC                         }
+# MAGIC                         if "name" in msg:
+# MAGIC                             chunk_data["name"] = msg["name"]
+# MAGIC                     else:
+# MAGIC                         chunk_data = {
+# MAGIC                             "role": "assistant",
+# MAGIC                             "content": str(msg)
+# MAGIC                         }
+# MAGIC                     yield ChatAgentChunk(delta=chunk_data)
+# MAGIC
+# MAGIC # Create the agent object, and specify it as the agent object to use when
+# MAGIC # loading the agent back for inference via mlflow.models.set_model()
+# MAGIC mlflow.langchain.autolog()
+# MAGIC AGENT = LangGraphChatAgent(multi_agent)
+# MAGIC mlflow.models.set_model(AGENT)
+
 
 # COMMAND ----------
 

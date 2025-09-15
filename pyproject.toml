@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "multi-agent-architecture"
 version = "0.1.0"
-description = "Multi-agent architecture with supervisor-of-supervisors pattern using LangGraph"
+description = "Multi-agent architecture with FMAPI tool-calling supervisor pattern for domain-specific agents, with optional LangGraph support"
 readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
     {name = "AJ", email = "andreas.jack@databricks.com"}
 ]
-keywords = ["multi-agent", "langgraph", "llm", "agents", "supervisor", "databricks"]
+keywords = ["multi-agent", "fmapi", "tool-calling", "langgraph", "llm", "agents", "supervisor", "databricks", "mlflow-responses", "genie-spaces", "vector-search"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -21,24 +21,32 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 dependencies = [
     # Core ML/AI frameworks
-    "mlflow>=2.8.0",
-    "langgraph>=0.3.4",
-    "langchain-core>=0.1.0",
+    "mlflow>=3.0.0",
     # Databricks integration (uses modern versions)
-    "databricks-langchain>=0.7.0",
-    "databricks-agents>=1.4.0", 
+    "databricks-agents>=1.4.0",
     "databricks-sdk>=0.65.0",
+    "databricks-openai>=1.0.0",  # For OpenAI client integration
+    # Utility libraries
+    "backoff>=2.2.0",  # For retry logic
+    "uv>=0.1.0",  # For environment management
     # Modern framework versions
     "pydantic>=2.11.0",  # Use Pydantic V2
     "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]
+# LangGraph dependencies for notebooks using LangGraph architecture
+langgraph = [
+    "langgraph>=0.3.4",
+    "langchain-core>=0.1.0",
+    "databricks-langchain>=0.7.0",
+]
 dev = [
     # Testing framework
     "pytest>=7.0.0",
@@ -76,7 +84,6 @@ test = [
 
 [project.urls]
 Repository = "https://github.com/aj/multi-agent-architecture"
-"Bug Tracker" = "https://github.com/aj/multi-agent-architecture/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

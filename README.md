@@ -1,6 +1,6 @@
 # Multi-Agent Architecture
 
-Databrcks examples for multi-agent systems with MLflow integration.
+Databricks examples for multi-agent systems with MLflow integration.
 
 ## Architecture Documentation
 

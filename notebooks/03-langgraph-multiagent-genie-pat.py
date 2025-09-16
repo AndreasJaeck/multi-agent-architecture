@@ -88,7 +88,7 @@
 # MAGIC
 # MAGIC # Add GENIE_SPACE_ID and a description for this space
 # MAGIC # You can find the ID in the URL of the genie room /genie/rooms/<GENIE_SPACE_ID>
-# MAGIC GENIE_SPACE_ID = "01f0273483ce143a9a12df723f5b960e"
+# MAGIC GENIE_SPACE_ID = "your_genie_space_id"
 # MAGIC genie_agent_description = "The genie agent can analyze coatings GBULT data including customer and plants consumption pattern, business type and supply model. Deep dive into high-consumption plants, and the impact of different business types and supply models on consumption."
 # MAGIC
 # MAGIC genie_agent = GenieAgent(
@@ -119,8 +119,8 @@
 # MAGIC
 # MAGIC # # TODO if desired, add additional tools and update the description of this agent
 # MAGIC # uc_tool_names = [
-# MAGIC #     "hong_zhu_demo_catalog.basf_genie_agent.compute_math",
-# MAGIC #     "hong_zhu_demo_catalog.basf_genie_agent.execute_python_code"
+# MAGIC #     "your_catalog.your_schema.compute_math",
+# MAGIC #     "your_catalog.your_schema.execute_python_code"
 # MAGIC # ]
 # MAGIC
 # MAGIC # uc_toolkit = UCFunctionToolkit(function_names=uc_tool_names)
@@ -131,7 +131,7 @@
 # MAGIC # Direct pythhon integration
 # MAGIC vector_search_index_tools = [
 # MAGIC     VectorSearchRetrieverTool(
-# MAGIC         index_name="hong_zhu_demo_catalog.basf_genie_agent.valona_optimized_index",
+# MAGIC         index_name="your_catalog.your_schema.your_index",
 # MAGIC         # TODO: specify index description for better agent tool selection
 # MAGIC         tool_name="find_news",
 # MAGIC         tool_description="Find latest news with similarity search based on description of content. This helps users to find latest news about about automotive and coatings industry. Returns results_itemId, title, created_date, modified_date, status, source, item_link, search_text, CAT_NAME, CAT_ID",
@@ -419,7 +419,7 @@ from mlflow.models import infer_signature
 resources = [
     DatabricksServingEndpoint(endpoint_name=LLM_ENDPOINT_NAME), 
     DatabricksGenieSpace(genie_space_id=GENIE_SPACE_ID), 
-    DatabricksVectorSearchIndex(index_name="hong_zhu_demo_catalog.basf_genie_agent.valona_optimized_index")
+    DatabricksVectorSearchIndex(index_name="your_catalog.your_schema.your_index")
 ]
 
 for tool in tools:
@@ -480,9 +480,9 @@ mlflow.models.predict(
 mlflow.set_registry_uri("databricks-uc")
 
 # TODO: define the catalog, schema, and model name for your UC model
-catalog = "hong_zhu_demo_catalog"
-schema = "basf_genie_agent"
-model_name = "multi_agent_basf"
+catalog = "your_catalog"
+schema = "your_schema"
+model_name = "your_multi_agent"
 UC_MODEL_NAME = f"{catalog}.{schema}.{model_name}"
 
 # register the model to UC
@@ -514,7 +514,7 @@ agents.deploy(
         "DATABRICKS_GENIE_PAT": "<put your access token here>",
         "DB_MODEL_SERVING_HOST_URL": "<put your workspace URL here>"
     },
-    endpoint_name="genie_multi_agent_basf"
+    endpoint_name="your_multi_agent_endpoint"
 )
 
 # COMMAND ----------

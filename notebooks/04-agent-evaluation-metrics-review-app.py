@@ -32,8 +32,8 @@
 
 # COMMAND ----------
 
-UC_CATALOG = 'hong_zhu_demo_catalog'
-UC_SCHEMA = 'basf_genie_agent'
+UC_CATALOG = 'your_catalog'
+UC_SCHEMA = 'your_schema'
 UC_PREFIX = f"{UC_CATALOG}.{UC_SCHEMA}"
 
 # COMMAND ----------
@@ -312,12 +312,12 @@ from databricks.agents import review_app
 ASSIGNED_USERS = []
 
 # Set the MLflow experiment used for agent deployment
-mlflow.set_experiment("/Users/hong.zhu@databricks.com/Genie in multi-agent systems/03-langgraph-multiagent-genie-pat")
+mlflow.set_experiment("/Users/your_username/Genie in multi-agent systems/your_experiment")
 my_review_app = review_app.get_review_app()
 
 my_review_app.add_agent(
     agent_name="Genie-multi-agent",
-    model_serving_endpoint="<put your workspace URL here>/serving-endpoints/genie_multi_agent_basf/invocations",
+    model_serving_endpoint="<put your workspace URL here>/serving-endpoints/your_multi_agent_endpoint/invocations",
 )
 
 my_review_app.create_label_schema(
@@ -332,7 +332,7 @@ my_review_app.create_label_schema(
 )
 
 # CHANGE TO YOUR PAYLOAD REQUEST LOGS TABLE
-PAYLOAD_REQUEST_LOGS_TABLE = "hong_zhu_demo_catalog.basf_genie_agent.multi_agent_basf_payload_request_logs"
+PAYLOAD_REQUEST_LOGS_TABLE = "your_catalog.your_schema.your_payload_logs_table"
 traces = spark.table(PAYLOAD_REQUEST_LOGS_TABLE).select("trace").limit(3).toPandas()
 
 my_session = my_review_app.create_labeling_session(

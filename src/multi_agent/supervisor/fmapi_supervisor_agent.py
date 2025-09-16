@@ -42,32 +42,16 @@ from openai import OpenAI
 
 from pydantic import BaseModel, ValidationError
 
+# Import agent configurations
+try:
+    from .agent_configs import DEFAULT_AGENTS, AgentConfig, SupervisorConfig
+except ImportError:
+    # Fallback to example config if agent_configs.py is not found
+    from .agent_configs_example import DEFAULT_AGENTS, AgentConfig, SupervisorConfig
 
-# ---------- Configuration: top-level supervisor settings ----------
-@dataclass
-class SupervisorConfig:
-    """Top-level supervisor configuration.
 
-    Attributes
-    - llm_endpoint: Name of the Databricks Serving chat-completions model used by the supervisor
-    - thinking_enabled: Reserved flag to hint reasoning-style prompts (not consumed here)
-    - max_steps: Safety cap for iterative tool-calling loops
-    """
-    llm_endpoint: str = "databricks-claude-3-7-sonnet"
-    thinking_enabled: bool = True
-    max_steps: int = 10
 
 # ---------- Data models: tool and expert configuration ----------
-@dataclass
-class ResourceConfig:
-    """Configuration for underlying resources that the agent depends on.
-
-    This includes Genie spaces, functions, vector search indices, and other
-    Databricks resources needed for authentication and access.
-    """
-    genie_spaces: List[str] = field(default_factory=list)
-    functions: List[str] = field(default_factory=list)
-    vector_search_indices: List[str] = field(default_factory=list)
 
 @dataclass
 class ToolInfo:
@@ -81,67 +65,23 @@ class ToolInfo:
     spec: Dict[str, Any]
     exec_fn: Callable[..., Any]
 
-@dataclass
-class AgentConfig:
-    """Configuration for a domain expert (backed by a Serving endpoint).
-
-    - name: human/LLM-facing expert name (also used as tool name)
-    - description: brief description for tool routing
-    - endpoint: Databricks model serving endpoint name for this expert
-    - system_prompt: system message used when invoking the expert
-    - capabilities/domain: optional metadata surfaced in tool descriptions to aid routing
-    - resources: underlying Databricks resources (Genie spaces, functions, vector indices)
-    """
-    name: str
-    description: str
-    endpoint: str
-    system_prompt: str
-    capabilities: Optional[str] = None
-    domain: Optional[str] = None
-    resources: ResourceConfig = field(default_factory=ResourceConfig)
-
 
 # ---------- Defaults and simple builder for single-file usage ----------
-# Default supervisor LLM endpoint (Databricks Serving)
-DEFAULT_SUPERVISOR_ENDPOINT = "databricks-claude-3-7-sonnet"
 
-# Example default experts. Adjust endpoints and prompts to your environment.
-DEFAULT_AGENTS: List[AgentConfig] = [
-    AgentConfig(
-        name="CoatingsSupervisorAgent",
-        description="Coatings industry SME for market news search and plant data analysis",
-        endpoint="genie_multi_agent_basf",
-        system_prompt="You are a coatings industry expert. Provide detailed analysis on coating-related topics.",
-        capabilities="semantic similarity search for coatings/automotive industry news, SQL-based analytics for automotive manufacturing plants",
-        domain="chemical_data",
-        resources=ResourceConfig(
-            genie_spaces=["01f0273483ce143a9a12df723f5b960e"],
-            vector_search_indices=["hong_zhu_demo_catalog.basf_genie_agent.valona_optimized_index"],
-        ),
-    ),
-    AgentConfig(
-        name="GenomicsSupervisorAgent",
-        description="Computational expert for mathematical calculations, Python execution, and data analysis",
-        endpoint="genie_multi_agent_basf_v2",
-        system_prompt="You are a computational expert specialized in mathematical calculations, Python code execution, and data analysis.",
-        capabilities="arithmetic calculations, mathematical computations, Python code execution, SQL-based data queries",
-        domain="computational_tools",
-        resources=ResourceConfig(
-            genie_spaces=["01f0671302ab1092bf22c090aa1d8fc2"],
-            functions=[
-                "hong_zhu_demo_catalog.basf_genie_agent.compute_math",
-                "hong_zhu_demo_catalog.basf_genie_agent.execute_python_code",
-            ],
-        ),
-    ),
-]
+# DEFAULT_AGENTS is imported from agent_configs.py or agent_configs_example.py
 
-def build_registry() -> AgentRegistry:
-    """Construct an `AgentRegistry` from DEFAULT_AGENTS using Serving executors.
+def build_registry(agent_configs: Optional[List[AgentConfig]] = None) -> AgentRegistry:
+    """Construct an `AgentRegistry` from agent configurations using Serving executors.
+
+    Parameters
+    - agent_configs: List of AgentConfig objects to use. If None, uses DEFAULT_AGENTS.
 
     Returns an in-memory registry that the supervisor exposes as function tools.
     """
-    executors: List[DomainAgentExecutor] = [DomainAgentExecutor(ac) for ac in DEFAULT_AGENTS]
+    if agent_configs is None:
+        agent_configs = DEFAULT_AGENTS
+
+    executors: List[DomainAgentExecutor] = [DomainAgentExecutor(ac) for ac in agent_configs]
     return AgentRegistry(executors)
 
 

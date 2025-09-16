@@ -21,15 +21,15 @@
 
 # COMMAND ----------
 
-`%md
+# MAGIC %md
 
-## Define the agent in code
-Define the agent code in a single cell below. This lets you easily write the agent code to a local Python file, using the `%%writefile` magic command, for subsequent logging and deployment.
-
-#### Agent tools
-This agent code adds the built-in Unity Catalog function `system.ai.python_exec` to the agent. The agent code also includes commented-out sample code for adding a vector search index to perform unstructured data retrieval.
-
-For more examples of tools to add to your agent, see Databricks documentation ([AWS](https://docs.databricks.com/aws/generative-ai/agent-framework/agent-tool) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/generative-ai/agent-framework/agent-tool))
+# MAGIC ## Define the agent in code
+# MAGIC Define the agent code in a single cell below. This lets you easily write the agent code to a local Python file, using the `%%writefile` magic command, for subsequent logging and deployment.
+# MAGIC
+# MAGIC #### Agent tools
+# MAGIC This agent code adds the built-in Unity Catalog function `system.ai.python_exec` to the agent. The agent code also includes commented-out sample code for adding a vector search index to perform unstructured data retrieval.
+# MAGIC
+# MAGIC For more examples of tools to add to your agent, see Databricks documentation ([AWS](https://docs.databricks.com/aws/generative-ai/agent-framework/agent-tool) | [Azure](https://learn.microsoft.com/en-us/azure/databricks/generative-ai/agent-framework/agent-tool))
 
 
 # COMMAND ----------
@@ -461,9 +461,9 @@ mlflow.models.predict(
 mlflow.set_registry_uri("databricks-uc")
 
 # TODO: define the catalog, schema, and model name for your UC model
-catalog = ""
-schema = ""
-model_name = ""
+catalog = "your_catalog"
+schema = "your_schema"
+model_name = "your_model"
 UC_MODEL_NAME = f"{catalog}.{schema}.{model_name}"
 
 # register the model to UC

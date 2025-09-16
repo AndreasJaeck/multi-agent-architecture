@@ -26,14 +26,14 @@
 
 # MAGIC %md 
 # MAGIC
-# MAGIC ### Use on BASF Workspace or Databricks managed Workspace
+# MAGIC ### Use a Databricks managed Workspace
 # MAGIC
 
 # COMMAND ----------
 
 # Specify catalog and schema
-catalog = "hong_zhu_demo_catalog"
-schema = "basf_genie_agent"
+catalog = "your_catalog"
+schema = "your_schema"
 
 # COMMAND ----------
 
@@ -76,7 +76,7 @@ spark.sql(f"USE SCHEMA {schema}")
 # MAGIC RETURN
 # MAGIC   SELECT results_itemId, title, created_date, modified_date,results_status, results_source, item_link, search_text, CAT_NAME, CAT_ID
 # MAGIC   FROM VECTOR_SEARCH(
-# MAGIC     index => 'hong_zhu_demo_catalog.basf_genie_agent.valona_optimized_index',
+# MAGIC     index => 'your_catalog.your_schema.your_index',
 # MAGIC     query => description,
 # MAGIC     num_results => 5
 # MAGIC   )
@@ -102,7 +102,7 @@ spark.sql(f"USE SCHEMA {schema}")
 # RETURN
 #   SELECT results_itemId, title, created_date, modified_date,results_status, results_source, item_link, substring(search_text, 0, 8192)
 #   FROM VECTOR_SEARCH(
-#     index => 'hong_zhu_demo_catalog.basf_genie_agent.valona_optimized_index',
+#     index => 'your_catalog.your_schema.your_index',
 #     query => description,
 #     num_results => 100
 #   )
@@ -157,7 +157,7 @@ spark.sql(f"USE SCHEMA {schema}")
 # MAGIC COMMENT 'Retrieve detailed information about a specific product using its product ID. Returns comprehensive product details including physical and chemical properties, usage recommendations, storage requirements, and pricing information.'
 # MAGIC RETURN
 # MAGIC   SELECT *
-# MAGIC   FROM <catalog_name>.chem_manufacturing.products
+# MAGIC   FROM your_catalog.your_schema.your_table
 # MAGIC   WHERE product_id = productid;
 
 # COMMAND ----------
@@ -187,7 +187,7 @@ spark.sql(f"USE SCHEMA {schema}")
 # MAGIC COMMENT 'Retrieve all safety protocols, handling procedures, and research notes associated with a specific product ID. Returns detailed safety information including protocols, procedures, and documentation needed for proper handling and use of the chemical product.'
 # MAGIC RETURN
 # MAGIC   SELECT description_id, description_type, product_id, title, content
-# MAGIC   FROM <catalog_name>.chem_manufacturing.descriptions
+# MAGIC   FROM your_catalog.your_schema.your_table
 # MAGIC   WHERE product_id = productid;
 
 # COMMAND ----------
@@ -217,7 +217,7 @@ spark.sql(f"USE SCHEMA {schema}")
 # MAGIC COMMENT 'Retrieve detailed information about the chemical reactions used in manufacturing a specific product. Returns comprehensive reaction parameters including reaction conditions, catalysts, solvents, environmental requirements, energy usage, and associated hazards.'
 # MAGIC RETURN
 # MAGIC   SELECT reaction_id, reaction_name, reaction_type, catalyst, solvent, temperature, pressure, reaction_time, energy_consumption, hazards
-# MAGIC   FROM <catalog_name>.chem_manufacturing.reactions
+# MAGIC   FROM your_catalog.your_schema.your_table
 # MAGIC   WHERE product_id = productid;
 
 # COMMAND ----------
@@ -252,9 +252,9 @@ spark.sql(f"USE SCHEMA {schema}")
 # MAGIC     SUM(CASE WHEN q.test_result = 'Pass' THEN 1 ELSE 0 END) as passed_tests,
 # MAGIC     SUM(CASE WHEN q.test_result = 'Fail' THEN 1 ELSE 0 END) as failed_tests,
 # MAGIC     ROUND(SUM(CASE WHEN q.test_result = 'Pass' THEN 1 ELSE 0 END) * 100.0 / COUNT(q.test_id), 2) as pass_rate
-# MAGIC   FROM <catalog_name>.chem_manufacturing.quality_control q
-# MAGIC   JOIN <catalog_name>.chem_manufacturing.batches b ON q.batch_id = b.batch_id
-# MAGIC   JOIN <catalog_name>.chem_manufacturing.products p ON b.product_id = p.product_id
+# MAGIC   FROM your_catalog.your_schema.your_table q
+# MAGIC   JOIN your_catalog.your_schema.your_table b ON q.batch_id = b.batch_id
+# MAGIC   JOIN your_catalog.your_schema.your_table p ON b.product_id = p.product_id
 # MAGIC   WHERE b.product_id = productid
 # MAGIC   GROUP BY p.product_name;
 
@@ -504,7 +504,7 @@ spark.sql(f"USE SCHEMA {schema}")
 # MAGIC COMMENT 'Compares the specified product with potential alternatives based on customer needs. Uses AI analysis to recommend suitable alternatives specifically addressing the customer\'s stated reason. Only requires product ID and reason for seeking an alternative.'
 # MAGIC RETURN 
 # MAGIC   WITH input_product AS (
-# MAGIC     SELECT * FROM dbdemos_a_jack.chem_manufacturing.products 
+# MAGIC     SELECT * FROM catalog_name.schema_name.table_name 
 # MAGIC     WHERE product_id = input_product_id
 # MAGIC   )
 # MAGIC   SELECT 
@@ -539,7 +539,7 @@ spark.sql(f"USE SCHEMA {schema}")
 # MAGIC     ) AS alternative_option,
 # MAGIC     p.product_id,
 # MAGIC     p.product_name
-# MAGIC   FROM <catalog_name>.chem_manufacturing.products p, input_product ip
+# MAGIC   FROM your_catalog.your_schema.your_table p, input_product ip    
 # MAGIC   WHERE p.product_id != input_product_id
 # MAGIC   LIMIT 3
 

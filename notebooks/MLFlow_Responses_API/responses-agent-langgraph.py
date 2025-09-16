@@ -435,9 +435,9 @@ mlflow.models.predict(
 mlflow.set_registry_uri("databricks-uc")
 
 # TODO: define the catalog, schema, and model name for your UC model
-catalog = ""
-schema = ""
-model_name = "langgraph-responses-agent"
+catalog = "your_catalog"
+schema = "your_schema"
+model_name = "your_langgraph_agent"
 UC_MODEL_NAME = f"{catalog}.{schema}.{model_name}"
 
 # register the model to UC

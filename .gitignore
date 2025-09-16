@@ -152,6 +152,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Sensitive agent configurations
+src/multi_agent/supervisor/agent_configs.py
+
 # Spyder project settings
 .spyderproject
 .spyproject

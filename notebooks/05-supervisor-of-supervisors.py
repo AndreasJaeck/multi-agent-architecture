@@ -5,11 +5,11 @@
 # MAGIC
 # MAGIC In this notebook, we demonstrate how to create a Supervisor Agent that delegates queries to two other specialized supervisor agents:
 # MAGIC
-# MAGIC 1. **genie_multi_agent_basf**:  
-# MAGIC    - Contains a Genie agent for Gbuilt data (from BASF).
-# MAGIC    - Includes a vector search tool agent for Valona data (also from BASF).
+# MAGIC 1. **company_data_agent**:
+# MAGIC    - Contains a Genie agent for Gbuilt data.
+# MAGIC    - Includes a vector search tool agent for Valona data.
 # MAGIC
-# MAGIC 2. **genie_multi_agent_basf_v2**:  
+# MAGIC 2. **genomics_tools_agent**:
 # MAGIC    - Contains a Genie agent for patient genomics data.
 # MAGIC    - Includes two function tool agents: one for mathematical computations and another for Python code execution.
 # MAGIC
@@ -22,11 +22,11 @@
 # MAGIC If you want to call gbuilt agent use gbuilt tag:
 # MAGIC
 # MAGIC
-# MAGIC **gbuilt: genie_multi_agent_basf**:  
-# MAGIC    - Contains a Genie agent for Gbuilt data (from BASF).
-# MAGIC    - Includes a vector search tool agent for Valona data (also from BASF).
+# MAGIC **company_data: company_data_agent**:
+# MAGIC    - Contains a Genie agent for Gbuilt data.
+# MAGIC    - Includes a vector search tool agent for Valona data.
 # MAGIC
-# MAGIC **genomics: genie_multi_agent_basf_v2**:  
+# MAGIC **genomics: genomics_tools_agent**:
 # MAGIC    - Contains a Genie agent for patient genomics data.
 # MAGIC    - Includes two function tool agents: one for mathematical computations and another for Python code execution.
 
@@ -68,16 +68,16 @@
 # MAGIC ## Create agents from existing endpoints
 # MAGIC ###################################################
 # MAGIC
-# MAGIC # BASF Data Agent (Gbuilt data + Valona vector search)
-# MAGIC basf_data_agent_description = (
-# MAGIC     "The BASF Data assistant has access to Gbuilt data from BASF and can perform vector search "
-# MAGIC     "on Valona market insights data. Use this agent for queries about BASF-related data, chemical information, "
-# MAGIC     "or when searching through BASF documentation and datasets."
+# MAGIC # Company Data Agent (Gbuilt data + Valona vector search)
+# MAGIC company_data_agent_description = (
+# MAGIC     "The Company Data assistant has access to Gbuilt data from Company and can perform vector search "
+# MAGIC     "on Valona market insights data. Use this agent for queries about Company-related data, chemical information, "
+# MAGIC     "or when searching through Company documentation and datasets."
 # MAGIC )
 # MAGIC
-# MAGIC BASF_DATA_ENDPOINT = "genie_multi_agent_basf"
-# MAGIC basf_data_model = ChatDatabricks(endpoint=BASF_DATA_ENDPOINT)
-# MAGIC basf_data_agent = create_react_agent(basf_data_model, [])
+# MAGIC COMPANY_DATA_ENDPOINT = "your_company_data_endpoint"
+# MAGIC company_data_model = ChatDatabricks(endpoint=COMPANY_DATA_ENDPOINT)
+# MAGIC company_data_agent = create_react_agent(company_data_model, [])
 # MAGIC
 # MAGIC # Genomics Tools Agent (patient genomics data + computational tools)
 # MAGIC genomics_tools_agent_description = (
@@ -86,7 +86,7 @@
 # MAGIC     "data processing, calculations, or when computational tools are needed."
 # MAGIC )
 # MAGIC
-# MAGIC GENOMICS_TOOLS_ENDPOINT = "genie_multi_agent_basf_v2"
+# MAGIC GENOMICS_TOOLS_ENDPOINT = "your_genomics_tools_endpoint"
 # MAGIC genomics_tools_model = ChatDatabricks(endpoint=GENOMICS_TOOLS_ENDPOINT)
 # MAGIC genomics_tools_agent = create_react_agent(genomics_tools_model, [])
 # MAGIC
@@ -106,7 +106,7 @@
 # MAGIC MAX_ITERATIONS = 3
 # MAGIC
 # MAGIC worker_descriptions = {
-# MAGIC     "BASF_Data": basf_data_agent_description,
+# MAGIC     "Company_Data": company_data_agent_description,
 # MAGIC     "Genomics_Tools": genomics_tools_agent_description,
 # MAGIC }
 # MAGIC
@@ -216,11 +216,11 @@
 # MAGIC     next_node: str
 # MAGIC     iteration_count: int
 # MAGIC
-# MAGIC basf_data_node = functools.partial(agent_node, agent=basf_data_agent, name="BASF_Data")
+# MAGIC company_data_node = functools.partial(agent_node, agent=company_data_agent, name="Company_Data")
 # MAGIC genomics_tools_node = functools.partial(agent_node, agent=genomics_tools_agent, name="Genomics_Tools")
 # MAGIC
 # MAGIC workflow = StateGraph(AgentState)
-# MAGIC workflow.add_node("BASF_Data", basf_data_node)
+# MAGIC workflow.add_node("Company_Data", company_data_node)
 # MAGIC workflow.add_node("Genomics_Tools", genomics_tools_node)
 # MAGIC workflow.add_node("supervisor", supervisor_agent)
 # MAGIC workflow.add_node("final_answer", final_answer)
@@ -344,7 +344,7 @@ dbutils.library.restartPython()
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Test genie_multi_agent_basf
+# MAGIC ## Test Company Data Agent
 
 # COMMAND ----------
 
@@ -366,7 +366,7 @@ AGENT.predict(input_example)
 
 # MAGIC %md
 # MAGIC
-# MAGIC ## Test genie_multi_agent_basf_v2
+# MAGIC ## Test Genomics Tools Agent
 
 # COMMAND ----------
 
@@ -406,24 +406,24 @@ from mlflow.models.resources import (
     DatabricksVectorSearchIndex
 )
 from pkg_resources import get_distribution
-from supervisor_of_supervisors import AGENT, LLM_ENDPOINT_NAME, BASF_DATA_ENDPOINT, GENOMICS_TOOLS_ENDPOINT
+from supervisor_of_supervisors import AGENT, LLM_ENDPOINT_NAME, COMPANY_DATA_ENDPOINT, GENOMICS_TOOLS_ENDPOINT
 
 resources = [
     # Supervisor endpoint
     DatabricksServingEndpoint(endpoint_name=LLM_ENDPOINT_NAME),
     
     # Sub-agent endpoints
-    DatabricksServingEndpoint(endpoint_name=BASF_DATA_ENDPOINT),
+    DatabricksServingEndpoint(endpoint_name=COMPANY_DATA_ENDPOINT),
     DatabricksServingEndpoint(endpoint_name=GENOMICS_TOOLS_ENDPOINT),
     
-    # BASF agent resources
-    DatabricksGenieSpace(genie_space_id="01f0273483ce143a9a12df723f5b960e"),
-    DatabricksVectorSearchIndex(index_name="hong_zhu_demo_catalog.basf_genie_agent.valona_optimized_index"),
+    # Company agent resources
+    DatabricksGenieSpace(genie_space_id="your_genie_space_id_1"),
+    DatabricksVectorSearchIndex(index_name="your_catalog.your_schema.your_index"),
     
     # Genomics agent resources  
-    DatabricksGenieSpace(genie_space_id="01f0671302ab1092bf22c090aa1d8fc2"),
-    DatabricksFunction(function_name="hong_zhu_demo_catalog.basf_genie_agent.compute_math"),
-    DatabricksFunction(function_name="hong_zhu_demo_catalog.basf_genie_agent.execute_python_code"),
+    DatabricksGenieSpace(genie_space_id="your_genie_space_id_2"),
+    DatabricksFunction(function_name="your_catalog.your_schema.compute_math"),
+    DatabricksFunction(function_name="your_catalog.your_schema.execute_python_code"),
 ]
 
 # Define input example
@@ -456,7 +456,7 @@ with mlflow.start_run():
         model_config={
             "agent_type": "supervisor",
             "sub_agents": {
-                "BASF_Data": BASF_DATA_ENDPOINT,
+                "Company_Data": COMPANY_DATA_ENDPOINT,
                 "Genomics_Tools": GENOMICS_TOOLS_ENDPOINT
             },
             "max_iterations": 3,
@@ -466,7 +466,7 @@ with mlflow.start_run():
     
     # Log additional metadata
     mlflow.log_param("supervisor_llm", LLM_ENDPOINT_NAME)
-    mlflow.log_param("basf_data_endpoint", BASF_DATA_ENDPOINT)
+    mlflow.log_param("company_data_endpoint", COMPANY_DATA_ENDPOINT)
     mlflow.log_param("genomics_tools_endpoint", GENOMICS_TOOLS_ENDPOINT)
     mlflow.log_param("num_resources", len(resources))
     
@@ -500,9 +500,9 @@ mlflow.models.predict(
 mlflow.set_registry_uri("databricks-uc")
 
 # TODO: define the catalog, schema, and model name for your UC model
-catalog = "hong_zhu_demo_catalog"
-schema = "basf_genie_agent"
-model_name = "supervisor_agent"
+catalog = "your_catalog"
+schema = "your_schema"
+model_name = "your_supervisor_agent"
 UC_MODEL_NAME = f"{catalog}.{schema}.{model_name}"
 
 # register the model to UC
@@ -528,5 +528,5 @@ agents.deploy(
     environment_vars={
         "DB_MODEL_SERVING_HOST_URL": "<put your workspace URL here>"
     },
-    endpoint_name="supervisor_agent_basf"
+    endpoint_name="your_supervisor_agent_endpoint"
 )

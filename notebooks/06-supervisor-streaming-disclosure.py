@@ -19,13 +19,15 @@
 # MAGIC - Log and deploy the supervisor agent
 # MAGIC
 # MAGIC ## Prerequisites
-# MAGIC - Access to both domain agent endpoints: `genie_multi_agent_basf` and `genie_multi_agent_basf_v2`
+# MAGIC - Access to both domain agent endpoints: `your_agent_endpoint_1` and `your_agent_endpoint_2`
 # MAGIC - Address all `TODO`s in this notebook.
 
 # COMMAND ----------
 
 # MAGIC %pip install -U -qqqq backoff databricks-openai uv databricks-agents mlflow-skinny[databricks]
 # MAGIC dbutils.library.restartPython()
+
+
 
 # COMMAND ----------
 
@@ -83,7 +85,7 @@ for agent in DEFAULT_AGENTS:
 # COMMAND ----------
 
 # Test with a chemical industry question
-print("=== Testing Chemical Industry Question ===")
+print("=== Testing Question ===")
 chemical_result = AGENT.predict({
     "input": [{"role": "user", "content": "What are the latest trends in automotive coating technologies and their impact on manufacturing processes?"}]
 })
@@ -93,7 +95,7 @@ print()
 # COMMAND ----------
 
 # Test with a genomics/computational question  
-print("=== Testing Genomics/Computational Question ===")
+print("=== Testing Question ===")
 genomics_result = AGENT.predict({
     "input": [{"role": "user", "content": "Can you analyze a gene expression dataset and calculate statistical significance using Python?"}]
 })

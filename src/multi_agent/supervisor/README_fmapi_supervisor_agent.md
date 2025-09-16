@@ -252,18 +252,30 @@ class AgentConfig:
     domain: Optional[str] = None        # Domain specialization metadata
 ```
 
-### Default Configuration
+### Configuration
 
-**Pre-configured Domain Experts:**
+**Configuration Files:**
+- `agent_configs.py` - Contains actual agent configurations (excluded from version control)
+- `agent_configs_example.py` - Contains anonymized example configurations
+
+**Setup:**
+1. Copy `agent_configs_example.py` to `agent_configs.py`
+2. Update `agent_configs.py` with your actual endpoints and resources
+
+**Example Agent Configuration:**
 ```python
 DEFAULT_AGENTS = [
     AgentConfig(
         name="CoatingsSupervisorAgent",
         description="Coatings industry SME for market news search and plant data analysis",
-        endpoint="genie_multi_agent_basf",
+        endpoint="your_coatings_endpoint",
         system_prompt="You are a coatings industry expert specializing in automotive coatings...",
         capabilities="semantic similarity search for coatings/automotive industry news, SQL-based analytics for automotive manufacturing plants",
         domain="chemical_data",
+        resources=ResourceConfig(
+            genie_spaces=["your_genie_space_id"],
+            vector_search_indices=["your_catalog.your_schema.your_index"]
+        )
     ),
     AgentConfig(
         name="GenomicsSupervisorAgent",

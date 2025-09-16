@@ -1,0 +1,201 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-agent-architecture"
+version = "0.1.0"
+description = "Multi-agent architecture with FMAPI tool-calling supervisor pattern for domain-specific agents, with optional LangGraph support"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "AJ", email = "andreas.jack@databricks.com"}
+]
+keywords = ["multi-agent", "fmapi", "tool-calling", "langgraph", "llm", "agents", "supervisor", "databricks", "mlflow-responses", "genie-spaces", "vector-search"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    # Core ML/AI frameworks
+    "mlflow>=3.0.0",
+    # Databricks integration (uses modern versions)
+    "databricks-agents>=1.4.0",
+    "databricks-sdk>=0.65.0",
+    "databricks-openai>=1.0.0",  # For OpenAI client integration
+    # Utility libraries
+    "backoff>=2.2.0",  # For retry logic
+    "uv>=0.1.0",  # For environment management
+    # Modern framework versions
+    "pydantic>=2.11.0",  # Use Pydantic V2
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+# LangGraph dependencies for notebooks using LangGraph architecture
+langgraph = [
+    "langgraph>=0.3.4",
+    "langchain-core>=0.1.0",
+    "databricks-langchain>=0.7.0",
+]
+dev = [
+    # Testing framework
+    "pytest>=7.0.0",
+    "pytest-mock>=3.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-xdist>=3.0.0",  # For parallel test execution
+    # Code quality
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "isort>=5.12.0",
+    "pre-commit>=3.0.0",
+    # Development utilities
+    "ipython>=8.0.0",
+    "jupyter>=1.0.0",
+    "ipdb>=0.13.0",
+]
+test = [
+    # Test framework and plugins
+    "pytest>=7.0.0",
+    "pytest-mock>=3.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-env>=0.6.2",  # Environment variable support
+    "pytest-timeout>=2.1.0",  # For test timeout support
+    # Test reporting and utilities
+    "unittest-xml-reporting>=3.2.0",
+    # Databricks testing utilities
+    "databricks-cli>=0.17.0",  # For CLI authentication checks
+]
+
+# CLI entry points removed - use direct script execution
+# python run_tests.py
+# python run_integration_tests.py
+
+[project.urls]
+Repository = "https://github.com/aj/multi-agent-architecture"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["multi_agent*"]
+
+[tool.setuptools.package-dir]
+"multi_agent" = "src/multi_agent"
+
+[tool.setuptools]
+py-modules = ["run_tests", "run_integration_tests"]
+
+# Testing configuration
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    # Suppress Pydantic V1 deprecation warnings from third-party packages
+    "-W", "ignore::pydantic.warnings.PydanticDeprecatedSince20",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow running tests",
+    "requires_llm: Tests that require LLM API access",
+    "requires_databricks: Tests requiring Databricks connectivity",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src/multi_agent"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/.*",
+]
+# Only enable coverage if multi_agent module is actually imported
+branch = true
+
+# Coverage paths for different test types
+[tool.coverage.paths]
+source = [
+    "src/multi_agent",
+    "*/site-packages/multi_agent",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# Code formatting
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# Import sorting
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+src_paths = ["src", "tests"]
+
+# Type checking
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "mlflow.*",
+    "databricks.*",
+    "langgraph.*",
+    "langchain.*",
+    "langchain_core.*",
+]
+ignore_missing_imports = true

@@ -42,7 +42,7 @@ def main():
     parser.add_argument(
         "--question",
         "-q",
-        default="Provide a detailed 4-6 bullet summary of current sustainability trends in automotive coatings",
+        default="Provide a detailed 4-6 bullet summary of current sustainability trends in automotive coatings and provide a calculation for root of 3x3x3x3x3x3/6",
         help="User question to send to the agent",
     )
     parser.add_argument(

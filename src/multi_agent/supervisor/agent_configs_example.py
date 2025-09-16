@@ -1,7 +1,7 @@
 """
 Example agent configuration file.
 
-This file shows how to configure DEFAULT_AGENTS for the FMAPI supervisor agent.
+This file shows how to configure DOMAIN_AGENTS for the FMAPI supervisor agent.
 Copy this file to agent_configs.py and customize with your actual endpoints and resources.
 
 For the actual configuration file, see agent_configs.py (which should be in .gitignore)
@@ -9,6 +9,20 @@ For the actual configuration file, see agent_configs.py (which should be in .git
 
 from dataclasses import dataclass, field
 from typing import List, Optional
+
+# ---------- Configuration: top-level supervisor settings ----------
+@dataclass
+class SupervisorConfig:
+    """Top-level supervisor configuration.
+
+    Attributes
+    - llm_endpoint: Name of the Databricks Serving chat-completions model used by the supervisor
+    - thinking_enabled: Reserved flag to hint reasoning-style prompts (not consumed here)
+    - max_steps: Safety cap for iterative tool-calling loops
+    """
+    llm_endpoint: str = "databricks-claude-3-7-sonnet"
+    thinking_enabled: bool = True
+    max_steps: int = 10
 
 
 @dataclass
@@ -45,7 +59,7 @@ class AgentConfig:
 
 # Example default experts. Adjust endpoints and prompts to your environment.
 # Replace the placeholder values with your actual Databricks resources.
-DEFAULT_AGENTS: List[AgentConfig] = [
+DOMAIN_AGENTS: List[AgentConfig] = [
     AgentConfig(
         name="ChemicalDataAgent",
         description="Chemical industry expert for market analysis and plant data",

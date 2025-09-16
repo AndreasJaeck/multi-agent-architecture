@@ -4,11 +4,6 @@ This directory contains agent configuration files for the FMAPI supervisor agent
 
 ## Files
 
-### `agent_configs.py` (SENSITIVE - Not Committed)
-Contains the actual agent configurations with real endpoints, Genie space IDs, and other sensitive information.
-
-**⚠️ IMPORTANT:** This file is excluded from version control via `.gitignore` and should never be committed to the repository.
-
 ### `agent_configs_example.py` (Safe for Version Control)
 Contains anonymized example configurations that can be safely committed and shared.
 

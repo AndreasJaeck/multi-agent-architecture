@@ -1,20 +1,81 @@
 # FMAPI Supervisor Agent
 
-An MLflow ResponsesAgent that implements a multi-agent architecture using tool-calling patterns. The supervisor orchestrates domain experts as OpenAI-compatible function tools, enabling task delegation and streaming responses compatible with FMAPI UIs.
-
-## Overview
-
 The FMAPI Supervisor Agent implements a hierarchical multi-agent architecture where a central supervisor coordinates specialized domain experts. Built on the MLflow ResponsesAgent framework, it provides:
 
 - **Intelligent Task Routing**: LLM-driven analysis of user queries with automatic delegation to appropriate domain experts
 - **Streaming Responses**: Real-time token streaming with FMAPI-compatible event emission for responsive UIs
-- **Robust Error Handling**: Comprehensive validation, error recovery, and fallback mechanisms
-- **Production Observability**: Full MLflow tracing integration for monitoring and debugging
-- **Enterprise Integration**: Support for Databricks Model Serving endpoints with OAuth and service principal authentication
+- **Hierarchical**: Multi-level coordination where central supervisor delegates to domain expert supervisors
+- **Federated**: Each domain expert maintains autonomous planning and orchestrates sub-agents
+- **Progressive Disclosure**: Communicates intentions and dynamically plans execution steps
+- **Distributed Synthesis**: Domain experts perform their own synthesis before forwarding to supervisor
+- **Real-time Feedback Loop**: Streaming updates can trigger re-assessment during response generation
+
+A hybrid multi-agent architecture combining **hierarchical coordination**, **federated autonomy**, and **progressive disclosure** patterns:
+
+```mermaid
+graph TD
+    A[User Query] --> B[RegistryToolCallingAgent<br/>Central Coordinator]
+
+    B --> C[Planning Phase<br/>Communicates Intent]
+    C --> D[Progressive Disclosure<br/>Execution Planning]
+
+    D --> E{Dynamic Assessment}
+    E --> F[Direct Response<br/>Simple Tasks]
+    E --> G[Delegation to Domain Experts<br/>Complex Tasks]
+
+    G --> H[Domain Expert 1<br/>Supervisor + Synthesis]
+    G --> I[Domain Expert 2<br/>Supervisor + Synthesis]
+    G --> J[Domain Expert N<br/>Supervisor + Synthesis]
+
+    H --> H1[Sub-Agent A]
+    H --> H2[Sub-Agent B]
+    I --> I1[Sub-Agent C]
+    I --> I2[Sub-Agent D]
+    J --> J1[Sub-Agent E]
+
+    H1 --> HS[Domain Synthesis]
+    H2 --> HS
+    I1 --> IS[Domain Synthesis]
+    I2 --> IS
+    J1 --> JS[Domain Synthesis]
+
+    HS --> K[Expert Response<br/>Federated Autonomy]
+    IS --> K
+    JS --> K
+
+    K --> L[Supervisor Response Integration]
+    F --> L
+    L --> M[Streaming Updates<br/>Progressive Disclosure]
+    M --> N[Final Response]
+
+    M --> E
+```
+
+
+**Key Features:**
+- Intelligent task routing with LLM-driven analysis and intent communication
+- Hierarchical domain experts that orchestrate specialized sub-agents
+- Distributed synthesis and response integration across multiple levels
+- Real-time feedback loops from streaming updates to dynamic assessment for continuous improvement
+- Progressive disclosure with streaming updates and reasoning
+- Comprehensive error handling and recovery across federated agent hierarchies
+- Production observability with MLflow tracing and streaming events
+
 
 ## Architecture
 
-### System Design
+### Hybrid Patterns
+
+Most production systems combine multiple architectural patterns to achieve optimal results. The FMAPI Supervisor Agent exemplifies this approach by integrating:
+
+- **Multi-level hierarchical coordination** where domain experts themselves orchestrate sub-agents
+- **Federated autonomy** with distributed synthesis and independent execution planning
+- **Progressive disclosure** for transparent multi-level execution planning
+- **Real-time feedback loops** enabling continuous assessment during streaming response generation
+
+This hybrid design creates a hierarchy where domain experts act as mini-supervisors, performing their own synthesis before forwarding results to the central coordinator, with real-time feedback loops from streaming updates enabling continuous improvement through dynamic re-assessment.
+
+### Agent Flow Design
 
 The FMAPI Supervisor Agent follows a layered architecture with clear separation of concerns:
 
@@ -52,6 +113,7 @@ graph TD
         I
     end
 ```
+
 
 ### Core Components
 
@@ -264,28 +326,34 @@ class AgentConfig:
 
 **Example Agent Configuration:**
 ```python
-DEFAULT_AGENTS = [
+DOMAIN_AGENTS: List[AgentConfig] = [
     AgentConfig(
-        name="CoatingsSupervisorAgent",
-        description="Coatings industry SME for market news search and plant data analysis",
-        endpoint="your_coatings_endpoint",
-        system_prompt="You are a coatings industry expert specializing in automotive coatings...",
-        capabilities="semantic similarity search for coatings/automotive industry news, SQL-based analytics for automotive manufacturing plants",
+        name="ChemicalDataAgent",
+        description="Chemical industry expert for market analysis and plant data",
+        endpoint="your_chemical_data_endpoint",
+        system_prompt="You are a chemical industry expert. Provide detailed analysis on chemical-related topics.",
+        capabilities="semantic similarity search for chemical industry news, SQL-based analytics for manufacturing plants",
         domain="chemical_data",
         resources=ResourceConfig(
-            genie_spaces=["your_genie_space_id"],
-            vector_search_indices=["your_catalog.your_schema.your_index"]
-        )
+            genie_spaces=["your_genie_space_id_1"],
+            vector_search_indices=["your_catalog.your_schema.your_vector_index"],
+        ),
     ),
     AgentConfig(
-        name="GenomicsSupervisorAgent",
-        description="Computational expert for mathematical calculations, Python execution, and data analysis",
-        endpoint="genie_multi_agent_basf_v2",
-        system_prompt="You are a computational expert specialized in mathematical calculations...",
-        capabilities="arithmetic calculations, mathematical computations, Python code execution, SQL-based data queries",
+        name="ComputationalAgent",
+        description="Computational expert for mathematical calculations and data analysis",
+        endpoint="your_computational_endpoint",
+        system_prompt="You are a computational expert specialized in mathematical calculations and data analysis.",
+        capabilities="arithmetic calculations, mathematical computations, Python code execution, data queries",
         domain="computational_tools",
-    ),
-]
+        resources=ResourceConfig(
+            genie_spaces=["your_genie_space_id_2"],
+            functions=[
+                "your_catalog.your_schema.compute_math_function",
+                "your_catalog.your_schema.execute_python_function",
+            ],
+        ),
+    )
 ```
 
 ### Custom Agent Registry
@@ -786,29 +854,8 @@ def health_check():
 health_check()
 ```
 
-### Test Scenarios
-
-#### Functional Tests
-- **Single Tool Execution**: Verify individual expert invocation
-- **Multi-Tool Orchestration**: Test complex task decomposition
-- **Streaming Performance**: Validate real-time response quality
-- **Error Recovery**: Test fault tolerance and graceful degradation
-
-#### Edge Cases
-- **Empty Responses**: Handle domain experts returning no content
-- **Tool Resolution**: Test fuzzy name matching and fallbacks
-- **Authentication Failures**: Validate error handling for Databricks connectivity
-- **Rate Limiting**: Test behavior under endpoint throttling
-
-#### Performance Benchmarks
-- **Latency**: Measure end-to-end response times
-- **Throughput**: Validate concurrent request handling
-- **Memory Usage**: Monitor resource consumption during streaming
-- **Tool Call Efficiency**: Measure tool selection accuracy
 
 ## Implementation Details
-
-
 
 
 #### Two-Phase Streaming Algorithm

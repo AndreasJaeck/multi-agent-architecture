@@ -44,10 +44,10 @@ from pydantic import BaseModel, ValidationError
 
 # Import agent configurations
 try:
-    from .agent_configs import DEFAULT_AGENTS, AgentConfig, SupervisorConfig
+    from .agent_configs import DOMAIN_AGENTS, AgentConfig, SupervisorConfig
 except ImportError:
     # Fallback to example config if agent_configs.py is not found
-    from .agent_configs_example import DEFAULT_AGENTS, AgentConfig, SupervisorConfig
+    from .agent_configs_example import DOMAIN_AGENTS, AgentConfig, SupervisorConfig
 
 
 
@@ -68,18 +68,18 @@ class ToolInfo:
 
 # ---------- Defaults and simple builder for single-file usage ----------
 
-# DEFAULT_AGENTS is imported from agent_configs.py or agent_configs_example.py
+# DOMAIN_AGENTS is imported from agent_configs.py or agent_configs_example.py
 
 def build_registry(agent_configs: Optional[List[AgentConfig]] = None) -> AgentRegistry:
     """Construct an `AgentRegistry` from agent configurations using Serving executors.
 
     Parameters
-    - agent_configs: List of AgentConfig objects to use. If None, uses DEFAULT_AGENTS.
+    - agent_configs: List of AgentConfig objects to use. If None, uses DOMAIN_AGENTS.
 
     Returns an in-memory registry that the supervisor exposes as function tools.
     """
     if agent_configs is None:
-        agent_configs = DEFAULT_AGENTS
+        agent_configs = DOMAIN_AGENTS
 
     executors: List[DomainAgentExecutor] = [DomainAgentExecutor(ac) for ac in agent_configs]
     return AgentRegistry(executors)

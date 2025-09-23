@@ -1,6 +1,6 @@
 # Multi-Agent Architecture - Team Hub
 
-A collaborative enterprise multi-agent systems. Exploring different approaches to multi-agent orchestration and Genie API integration.
+A collaborative enterprise multi-agent system. Exploring different approaches to multi-agent orchestration and Genie API integration.
 
 ## 🏗️ Target Architecture
 
@@ -92,7 +92,7 @@ graph LR
 **Business Entity Silos**: Each domain operates as an isolated silo with its own specialized language, acronyms, and domain expertise. Tools remain exclusive within each domain boundary. **Cross-domain communication only occurs via the supervisor level**, ensuring clean separation of concerns while maintaining centralized coordination.
 
 ## 🎯 Team Contributions
-Every Team will explore specific 
+Each team will explore specific aspects of multi-agent architectures: 
 
 ### 🚀 **[Multi-Layered Architecture](teams/multi-layered-architecture/README.md)**  - Supervisor patterns
 - Supervisor of supervisors pattern
@@ -101,9 +101,9 @@ Every Team will explore specific
 
 ### 🔗 **[ECT](teams/ect/README.md)** - Genie Rooms Orchestration
 - Multi-Genie data room orchestration
-- Cross Team learning
+- Cross-team learning
 
-### 📊 **[Marketing Team](teams/marketing/README.md)** - Multi Tool Agent
+### 📊 **[Marketing Team](teams/marketing/README.md)** - Multi-Tool Agent
 - Vector Search integration
 - Genie API integration for marketing data
 
@@ -118,16 +118,25 @@ Every Team will explore specific
 
 - **[Multi-Agent Architectures Overview](docs/MultiAgentArchitectures.md)** - Complete architectural documentation with design patterns, flow charts, and implementation guides
 
-## 📓 Example Notebooks
 
-### Core Implementations
-- **[FMAPI Streaming Supervisor](notebooks/06-supervisor-streaming-disclosure.py)** - Main FMAPI implementation with streaming responses
+## Example Notebooks:
+
+### Responses Agents
+
+- **[OpenAI tool-calling agent using Databricks-hosted models](https://docs.databricks.com/aws/en/notebooks/source/generative-ai/responses-agent-fmapi.html)** - Example of tool-calling responses agent built on top of foundational models.
+
+- **[UC Multi-Tool Responses Agent](src/uc_multi_tool_responses_agent/README.md)** - Responses agent that integrates with vector search, UC tools, and other agent endpoints (can be used as supervisor).
+- **[Custom FMAPI Streaming Supervisor](src/multi_agent/supervisor/README_fmapi_supervisor_agent.md)** - Custom supervisor-of-supervisors built around foundational models with Responses API and chat completion models.
 - **[MLflow Responses API](notebooks/MLFlow_Responses_API/)** - Response API patterns and integration examples
 
-### Architecture Patterns
+## Langgraph Implementations
 - **[Supervisor of Supervisors (legacy)](notebooks/05-supervisor-of-supervisors.py)** - Hierarchical supervisor pattern implementation
 - **[LangGraph Multi-Agent (legacy)](notebooks/03-langgraph-multiagent-genie-pat.py)** - LangGraph-based multi-agent orchestration
 - **[Agent Evaluation Metrics](notebooks/04-agent-evaluation-metrics-review-app.py)** - Comprehensive agent evaluation and metrics
 - **[Tool Functions](notebooks/02-create-tool-functions.py)** - Utility functions for agent tool creation
 
 
+## What is on the roadmap?
+- **[Multi-Agent Supervisor with Agent Bricks](https://docs.databricks.com/aws/en/generative-ai/agent-bricks/multi-agent-supervisor)** - Create Supervisor Agents (Tool Agents and Genie Data Rooms) in minutes!
+- **[Managed MCP for Databricks](https://docs.databricks.com/aws/en/generative-ai/mcp/)** - Integrate Tools, Genie Data Rooms, Vector Search with standardized protocol and share integrations across entities. 
+- **[Stateful Agents with Lakebase](https://docs.databricks.com/aws/en/generative-ai/agent-framework/stateful-agents#example-notebook)** - Come back to your chats at any time. 

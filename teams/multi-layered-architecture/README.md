@@ -1,7 +1,13 @@
 # Multi-Agent Architecture
 
-Databricks examples for multi-agent systems with MLflow integration.
+## Hackathon Goals
 
+**Core Objectives:**
+- Find the optimal approach to orchestrate multiple agents
+
+**Main Challenges:**
+- **Runtime Efficiency**: Minimize LLM calls in chat completions, implement progressive disclosure for transparency, leverage Responses API for lightweight tool (agent) calls during streaming responses
+- **Intelligent Routing**: Develop clear, descriptive agent integration patterns for effective request routing
 
 ## Architecture Documentation
 
@@ -22,31 +28,26 @@ Databricks examples for multi-agent systems with MLflow integration.
 - **[Supervisor of Supervisors (legacy)](../../notebooks/05-supervisor-of-supervisors.py)** - Hierarchical supervisor pattern
 
 
-## Multi-layered architecture
+## Supervisor of Supervisors
 
 🤖 **[FMAPI Supervisor Agent](../../src/multi_agent/supervisor/README_fmapi_supervisor_agent.md)**
-- Disclosure multi turn agent
+- Multi-turn agent with progressive disclosure
 - Tool-calling based multi-agent orchestration
 - MLflow ResponsesAgent integration
-- Streaming responses
+- Streaming response capabilities
 
 
-## Quick Start
+## UC Multi-Tool Responses Agent
 
-## Project Structure
+🤖 **[UC Multi-Tool Responses Agent README](../../src/uc_multi_tool_responses_agent/README.md)**
+- Multi-tool integration with Unity Catalog functions, vector search, and agent endpoints
+- Thread-safe conversation handling with streaming responses
+- Intelligent tool selection and execution orchestration
+- MLflow ResponsesAgent integration with FMAPI compatibility
+- Production-ready agent with configurable tool registry
 
-```
-├── src/                    # Core implementations
-│   └── multi_agent/        # Main package
-├── notebooks/             # Example implementations
-├── docs/                  # Architecture documentation
-└── tests/                 # Test suites
-```
+📄 **[Agent Implementation](../../src/uc_multi_tool_responses_agent/agent.py)** - Core tool-calling agent with MLflow integration
+📄 **[Interface Module](../../src/uc_multi_tool_responses_agent/interface.py)** - Agent interface and API definitions
+🧪 **[Integration Tests](../../tests/integration/test_fmapi_supervisor_agent.py)** - Test suite for agent functionality
 
-## Key Features
 
-- **Multiple Architecture Patterns**: Hierarchical, pipeline, and mesh designs
-- **MLflow Integration**: Production-ready deployment and monitoring
-- **Streaming Support**: Real-time responses with FMAPI compatibility
-- **Enterprise Authentication**: Databricks OAuth and service principal support
-- **Tool-Calling Orchestration**: Intelligent agent coordination and routing

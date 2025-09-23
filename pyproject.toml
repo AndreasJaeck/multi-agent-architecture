@@ -31,7 +31,7 @@ dependencies = [
     # Databricks integration (uses modern versions)
     "databricks-agents>=1.4.0",
     "databricks-sdk>=0.65.0",
-    "databricks-openai>=1.0.0",  # For OpenAI client integration
+    "databricks-openai>=0.6.0",  # For OpenAI client integration
     # Utility libraries
     "backoff>=2.2.0",  # For retry logic
     "uv>=0.1.0",  # For environment management
@@ -75,7 +75,7 @@ test = [
     # Test reporting and utilities
     "unittest-xml-reporting>=3.2.0",
     # Databricks testing utilities
-    "databricks-cli>=0.17.0",  # For CLI authentication checks
+    "databricks-cli>=0.18.0",  # For CLI authentication checks (new CLI installed separately)
 ]
 
 # CLI entry points removed - use direct script execution

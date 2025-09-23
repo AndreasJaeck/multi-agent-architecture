@@ -15,14 +15,19 @@
 
 ## Key Resources
 
+### Genie API Orchestrator
+🤖 **[LangGraph Multi-Agent Genie Pattern](https://docs.databricks.com/aws/en/notebooks/source/generative-ai/langgraph-multiagent-genie-pat.html)** - Reference implementation for orchestrating multiple agents with Genie spaces using LangGraph
+
+### Genie Orchestrator Notebook
+🔗 **[LangGraph Multi-Agent](../../notebooks/03-langgraph-multiagent-genie-pat.py)** - Example for Agent and Genie Orchestration
+
+
+
+## Optional
+
 ### Vector Search & Multi-Tool Integration
 🤖 **[UC Multi-Tool Responses Agent](../../src/uc_multi_tool_responses_agent/README.md)** - Multi-tool agent with Vector Index and UC Tools Integration (no Genie support)
 
-### Genie API Integration
-🔗 **[LangGraph Multi-Agent](../../notebooks/03-langgraph-multiagent-genie-pat.py)** - Example for Agent and Genie Orchestration
-
-### Data Discovery Patterns
-🔍 **[Tool Functions](../../notebooks/02-create-tool-functions.py)** - Utility functions for agent tool creation and data processing
 📊 **[Agent Evaluation](../../notebooks/04-agent-evaluation-metrics-review-app.py)** - Evaluation frameworks for data discovery agents
 
 ## Integration Points

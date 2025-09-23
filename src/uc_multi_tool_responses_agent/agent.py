@@ -107,8 +107,8 @@ class Message:
     Unified message representation supporting multiple formats.
 
     This class handles conversion between different message formats used in the system:
-    - Responses API format (MLflow's internal format)
-    - Chat Completion format (OpenAI-compatible format)
+    - Responses API format (OpenAI-compatible format)
+    - Chat Completion format (Langgraph/Claude-compatible format)
 
     It supports complex message types including tool calls, tool results, and streaming content.
     """

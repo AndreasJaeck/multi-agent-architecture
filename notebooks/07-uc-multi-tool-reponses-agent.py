@@ -32,7 +32,7 @@
 # Import the UC Multi-Tool Responses Agent from our source code
 import sys
 import os
-sys.path.append('/Workspace/Users/andreas.jack@databricks.com/multi-agent-architecture/src')
+sys.path.append('<set your databricks path to src>')
 
 
 # COMMAND ----------
@@ -292,8 +292,8 @@ print(f"Response structure: {list(validation_result.keys()) if isinstance(valida
 mlflow.set_registry_uri("databricks-uc")
 
 # TODO: define the catalog, schema, and model name for your UC model
-catalog = "dbdemos_aj"
-schema = "dbdemos_agent_tools"  
+catalog = "<set your catalog>"
+schema = "<set your schema>"  
 model_name = "uc_multi_tool_responses_agent"
 UC_MODEL_NAME = f"{catalog}.{schema}.{model_name}"
 

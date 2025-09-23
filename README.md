@@ -130,8 +130,8 @@ Each team will explore specific aspects of multi-agent architectures:
 - **[MLflow Responses API](notebooks/MLFlow_Responses_API/)** - Response API patterns and integration examples
 
 ## Langgraph Implementations
-- **[Supervisor of Supervisors (legacy)](notebooks/05-supervisor-of-supervisors.py)** - Hierarchical supervisor pattern implementation
-- **[LangGraph Multi-Agent (legacy)](notebooks/03-langgraph-multiagent-genie-pat.py)** - LangGraph-based multi-agent orchestration
+- **[Supervisor of Supervisors ](notebooks/05-supervisor-of-supervisors.py)** - Hierarchical supervisor pattern implementation
+- **[LangGraph Genie and Agent Orchestrator](notebooks/03-langgraph-multiagent-genie-pat.py)** - LangGraph-based multi-agent orchestration
 - **[Agent Evaluation Metrics](notebooks/04-agent-evaluation-metrics-review-app.py)** - Comprehensive agent evaluation and metrics
 - **[Tool Functions](notebooks/02-create-tool-functions.py)** - Utility functions for agent tool creation
 

@@ -199,11 +199,15 @@ input_example = {
     ]
 }
 
-# Log the model with proper dependencies using the in-memory agent instance
+# Log the model with source code included for proper deployment
 with mlflow.start_run():
     logged_agent_info = mlflow.pyfunc.log_model(
         name="supervisor_agent",
-        python_model=AGENT,
+        python_model=AGENT,  # Use the existing agent instance
+        code_paths=[
+            "src/multi_agent/supervisor/fmapi_supervisor_agent.py",
+            "src/multi_agent/supervisor/agent_configs.py"
+        ],
         input_example=input_example,
         extra_pip_requirements=[
             f"databricks-connect=={get_distribution('databricks-connect').version}",
@@ -219,11 +223,18 @@ with mlflow.start_run():
             "domain_agents": {
                 agent.name: {
                     "endpoint": agent.endpoint,
+                    "description": agent.description,
+                    "capabilities": agent.capabilities,
+                    "domain": agent.domain,
                 }
                 for agent in DEFAULT_AGENTS
             },
             "supervisor_llm": SupervisorConfig().llm_endpoint,
-            "max_iterations": 10
+            "max_iterations": 10,
+            "source_files_logged": [
+                "src/multi_agent/supervisor/fmapi_supervisor_agent.py",
+                "src/multi_agent/supervisor/agent_configs.py"
+            ]
         }
     )
 
@@ -272,16 +283,24 @@ from mlflow.genai.scorers import RelevanceToQuery, Safety
 # Create evaluation dataset covering both domains and multi-domain scenarios
 eval_dataset = [
     {
-        "inputs": {"input": [{"role": "user", "content": "What are the environmental benefits of water-based coatings compared to solvent-based coatings?"}]},
-        "expected_response": "Water-based coatings offer significant environmental advantages including reduced VOC emissions, lower toxicity, and easier disposal compared to solvent-based alternatives.",
+        "inputs": {"input": [{"role": "user", "content": "Recommend some classic rock songs for a road trip playlist"}]},
+        "expected_response": "Classic rock songs perfect for road trips include Born to Run by Bruce Springsteen, Life is a Highway by Tom Cochrane, Take It Easy by Eagles, and Sweet Home Alabama by Lynyrd Skynyrd.",
     },
     {
-        "inputs": {"input": [{"role": "user", "content": "Calculate the statistical significance of gene expression differences between two groups using Python."}]},
-        "expected_response": "Statistical significance can be calculated using t-tests, Mann-Whitney U tests, or other appropriate statistical methods depending on data distribution and study design.",
+        "inputs": {"input": [{"role": "user", "content": "What's the best time to visit Japan for cherry blossoms?"}]},
+        "expected_response": "The best time to visit Japan for cherry blossoms is typically late March to early April, depending on the region. Tokyo usually peaks in late March, while Kyoto peaks in early April.",
     },
     {
-        "inputs": {"input": [{"role": "user", "content": "How can machine learning be applied to optimize coating formulations while considering manufacturing constraints?"}]},
-        "expected_response": "Machine learning can optimize coating formulations through predictive modeling, multi-objective optimization, and integration of manufacturing process parameters.",
+        "inputs": {"input": [{"role": "user", "content": "Suggest music for a relaxing beach vacation"}]},
+        "expected_response": "For a relaxing beach vacation, consider chill music like reggae (Bob Marley), acoustic folk (Jack Johnson), ambient electronic (Bonobo), or tropical house music that matches the laid-back beach atmosphere.",
+    },
+    {
+        "inputs": {"input": [{"role": "user", "content": "How much does a week-long trip to Paris cost?"}]},
+        "expected_response": "A week-long trip to Paris typically costs $1,500-$3,000 per person including flights, mid-range hotels, meals, and attractions, depending on season and travel style. Budget travelers can manage $1,000 while luxury travelers might spend $5,000+.",
+    },
+    {
+        "inputs": {"input": [{"role": "user", "content": "What jazz artists should I listen to if I like Miles Davis?"}]},
+        "expected_response": "If you like Miles Davis, try other jazz greats like John Coltrane, Charlie Parker, Thelonious Monk, Billie Holiday, Duke Ellington, and contemporary artists like Kamasi Washington or Robert Glasper.",
     }
 ]
 

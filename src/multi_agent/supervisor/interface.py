@@ -86,13 +86,11 @@ def print_response_stream(request: ResponsesAgentRequest):
 
                     elif item.get('type') == 'function_call_output':
                         result = item.get('output', '')
-                        # For streaming tools, don't show the final result since it was already streamed
-                        # For non-streaming tools, show the result
-                        if not tool_calls:  # If no tool calls, this is unexpected, but show result anyway
-                            if result:
-                                print(f"✅ [Tool Result: {result}]")
-                            else:
-                                print("✅ [Tool Result: (empty)]")
+                        # Show the tool result
+                        if result:
+                            print(f"\n✅ [Tool Result: {result[:200]}{'...' if len(result) > 200 else ''}]")
+                        else:
+                            print("\n✅ [Tool Result: (empty)]")
                         # Clear tool_calls after processing to reset for next interaction
                         tool_calls.clear()
 

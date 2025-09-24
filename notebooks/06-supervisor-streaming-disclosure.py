@@ -55,15 +55,14 @@ sys.path.append('/Workspace/src')
 
 from multi_agent.supervisor.fmapi_supervisor_agent import (
     AGENT,
-    DEFAULT_AGENTS,
+    DOMAIN_AGENTS,
     SupervisorConfig,
-    ResourceConfig,
     build_registry,
     create_registry_supervisor_agent,
 )
 
 print("Available Domain Agents:")
-for agent in DEFAULT_AGENTS:
+for agent in DOMAIN_AGENTS:
     print(f"- {agent.name}: {agent.description}")
     print(f"  Endpoint: {agent.endpoint}")
     if agent.resources.genie_spaces:
@@ -156,7 +155,7 @@ from mlflow.models.resources import (
 from pkg_resources import get_distribution
 
 # Define all endpoints used by the supervisor
-domain_agent_endpoints = [agent.endpoint for agent in DEFAULT_AGENTS]
+domain_agent_endpoints = [agent.endpoint for agent in DOMAIN_AGENTS]
 
 # Attach resources for automatic authentication passthrough
 resources = [
@@ -164,8 +163,8 @@ resources = [
     DatabricksServingEndpoint(endpoint_name=SupervisorConfig().llm_endpoint),
 ]
 
-# Dynamically add all resources from DEFAULT_AGENTS configuration
-for agent in DEFAULT_AGENTS:
+# Dynamically add all resources from DOMAIN_AGENTS configuration
+for agent in DOMAIN_AGENTS:
     # Add the serving endpoint
     resources.append(DatabricksServingEndpoint(endpoint_name=agent.endpoint))
 
@@ -188,6 +187,38 @@ for endpoint in domain_agent_endpoints:
 print(f"- Total resources: {len(resources)} (endpoints, genie spaces, vector search, functions)")
 
 # COMMAND ----------
+# Copy supervisor agent files to project root for MLflow logging
+import shutil
+from pathlib import Path
+
+def copy_supervisor_files_for_mlflow():
+    """Copy supervisor agent files to project root for easier MLflow logging."""
+
+    src_dir = Path("<put full path to src/multi_agent/supervisor>")
+    dst_dir = Path(".")
+
+    files_to_copy = [
+        "fmapi_supervisor_agent.py",
+        "agent_configs.py"
+    ]
+
+    print("Copying FMAPI supervisor agent files to project root for MLflow logging...")
+
+    for filename in files_to_copy:
+        src_file = src_dir / filename
+        dst_file = dst_dir / filename
+
+        if src_file.exists():
+            shutil.copy2(src_file, dst_file)
+            print(f"Copied {filename} to project root")
+        else:
+            print(f"Source file {src_file} not found")
+
+# Copy the files before logging
+copy_supervisor_files_for_mlflow()
+
+
+# COMMAND ----------
 
 # Define input example for the supervisor agent
 input_example = {
@@ -199,14 +230,16 @@ input_example = {
     ]
 }
 
+
+
 # Log the model with source code included for proper deployment
 with mlflow.start_run():
     logged_agent_info = mlflow.pyfunc.log_model(
         name="supervisor_agent",
-        python_model="src/multi_agent/supervisor/fmapi_supervisor_agent.py",  # Use the existing agent instance
+        python_model="fmapi_supervisor_agent.py",  # Use the copied file in root directory
         code_paths=[
-            "src/multi_agent/supervisor/fmapi_supervisor_agent.py",
-            "src/multi_agent/supervisor/agent_configs.py"
+            "fmapi_supervisor_agent.py",
+            "agent_configs.py"
         ],
         input_example=input_example,
         extra_pip_requirements=[
@@ -227,25 +260,25 @@ with mlflow.start_run():
                     "capabilities": agent.capabilities,
                     "domain": agent.domain,
                 }
-                for agent in DEFAULT_AGENTS
+                for agent in DOMAIN_AGENTS
             },
             "supervisor_llm": SupervisorConfig().llm_endpoint,
             "max_iterations": 10,
             "source_files_logged": [
-                "src/multi_agent/supervisor/fmapi_supervisor_agent.py",
-                "src/multi_agent/supervisor/agent_configs.py"
+                "fmapi_supervisor_agent.py",
+                "agent_configs.py"
             ]
         }
     )
 
     # Log additional metadata
     mlflow.log_param("supervisor_llm", SupervisorConfig().llm_endpoint)
-    mlflow.log_param("num_domain_agents", len(DEFAULT_AGENTS))
+    mlflow.log_param("num_domain_agents", len(DOMAIN_AGENTS))
     mlflow.log_param("num_resources", len(resources))
 
     # Create a summary of domain agents
     agent_summary = {}
-    for agent in DEFAULT_AGENTS:
+    for agent in DOMAIN_AGENTS:
         agent_summary[agent.name] = {
             "endpoint": agent.endpoint,
             "description": agent.description,

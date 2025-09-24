@@ -203,7 +203,7 @@ input_example = {
 with mlflow.start_run():
     logged_agent_info = mlflow.pyfunc.log_model(
         name="supervisor_agent",
-        python_model=AGENT,  # Use the existing agent instance
+        python_model="src/multi_agent/supervisor/fmapi_supervisor_agent.py",  # Use the existing agent instance
         code_paths=[
             "src/multi_agent/supervisor/fmapi_supervisor_agent.py",
             "src/multi_agent/supervisor/agent_configs.py"

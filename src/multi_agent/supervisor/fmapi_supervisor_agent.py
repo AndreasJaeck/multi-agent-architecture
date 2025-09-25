@@ -118,10 +118,17 @@ class DomainAgentExecutor:
         Returns
         - The assistant message content string, or an empty string if unavailable
         """
-        messages = [
-            {"role": "system", "content": self.config.system_prompt},
-            {"role": "user", "content": query},
-        ]
+        # For ChatAgent endpoints (MLflow ChatAgents), only send user message
+        # since they have their own internal system prompts
+        is_chat_agent = "agents_" in self.config.endpoint  # ChatAgent endpoints typically have "agents_" prefix
+
+        if is_chat_agent:
+            messages = [{"role": "user", "content": query}]
+        else:
+            messages = [
+                {"role": "system", "content": self.config.system_prompt},
+                {"role": "user", "content": query},
+            ]
 
         resp = self._client.chat.completions.create(
             model=self.config.endpoint,

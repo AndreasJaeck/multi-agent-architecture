@@ -130,21 +130,11 @@ class DomainAgentExecutor:
             max_tokens=1000,
         )
 
-        # Check if choices exist and inspect their structure
+        # First try OpenAI format (standard chat completions)
         if hasattr(resp, "choices") and resp.choices and len(resp.choices) > 0:
             choice = resp.choices[0]
-            # Check if choice has message
             if hasattr(choice, "message"):
                 message = choice.message
-                # Try to get all attributes and their values
-                for attr in dir(message):
-                    if not attr.startswith('_'):
-                        try:
-                            value = getattr(message, attr)
-                        except Exception as e:
-                            pass
-
-                # Try multiple ways to extract content
                 content = getattr(message, "content", None)
                 if content is not None and len(str(content).strip()) > 0:
                     return str(content)
@@ -156,24 +146,39 @@ class DomainAgentExecutor:
                         if value and isinstance(value, str) and len(value.strip()) > 0:
                             return value
 
-            else:
-                # Maybe the content is directly in the choice?
-                for attr in dir(choice):
-                    if not attr.startswith('_'):
-                        try:
-                            value = getattr(choice, attr)
-                            if value is not None and isinstance(value, str) and len(value.strip()) > 0:
-                                return value
-                        except Exception as e:
-                            pass
-        else:
-            # Try alternative response format: check for messages directly
-            if hasattr(resp, "messages") and resp.messages and len(resp.messages) > 0:
-                for msg in resp.messages:
-                    if msg.get("role") == "assistant" and "content" in msg:
-                        content = msg["content"]
-                        if content and isinstance(content, str) and len(content.strip()) > 0:
-                            return content
+        # Try ChatAgent format (MLflow ChatAgent responses)
+        if hasattr(resp, "messages") and resp.messages and len(resp.messages) > 0:
+            for msg in resp.messages:
+                if msg.get("role") == "assistant" and "content" in msg:
+                    content = msg["content"]
+                    if content and isinstance(content, str) and len(content.strip()) > 0:
+                        return content
+
+        # Try direct content access (some endpoints might return content directly)
+        if hasattr(resp, "content"):
+            content = resp.content
+            if content and isinstance(content, str) and len(content.strip()) > 0:
+                return content
+
+        # Try parsing as JSON (ChatAgent responses might be JSON strings)
+        if isinstance(resp, str):
+            try:
+                import json
+                parsed = json.loads(resp)
+                # Check for ChatAgent format
+                if "messages" in parsed and parsed["messages"]:
+                    for msg in parsed["messages"]:
+                        if msg.get("role") == "assistant" and "content" in msg:
+                            content = msg["content"]
+                            if content and isinstance(content, str) and len(content.strip()) > 0:
+                                return content
+                # Check for direct content
+                if "content" in parsed:
+                    content = parsed["content"]
+                    if content and isinstance(content, str) and len(content.strip()) > 0:
+                        return content
+            except (json.JSONDecodeError, TypeError):
+                pass
 
         return ""
 

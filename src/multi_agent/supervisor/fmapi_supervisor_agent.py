@@ -124,6 +124,7 @@ class DomainAgentExecutor:
 
         if is_chat_agent:
             messages = [{"role": "user", "content": query}]
+            
         else:
             messages = [
                 {"role": "system", "content": self.config.system_prompt},
